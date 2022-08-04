@@ -64,6 +64,17 @@ const generateObject = (req, temp ,callback) =>{
 		Object.assign(obj, {'project-details':req.form_response.answers[5].text})
 		Object.assign(obj, {"related-projects": false})
 
+	}else if(temp.params.collectionid == process.env.WEBFLOW_7){
+		console.log(`[Singapore Microsite 2021] Adding a new record to a collection with an ID of: ${process.env.WEBFLOW_7}`)
+		Object.assign(obj, {'client': req.form_response.answers[0].text})
+		Object.assign(obj, {'name': req.form_response.answers[0].text})
+		Object.assign(obj, {'view-live-website': req.form_response.answers[1].url})
+		Object.assign(obj, {'company-email':req.form_response.answers[2].email})
+		Object.assign(obj, {'csr-report':{'url': req.form_response.answers[3].file_url}})
+		Object.assign(obj, {'main-project-image':{'url':req.form_response.answers[4].file_url}})
+		Object.assign(obj, {'project-details':req.form_response.answers[5].text})
+		Object.assign(obj, {"related-projects": false})
+
 	}
 	//Add another if statement for every new typeform fields
 	//Add collectionid value to .env for the if statement
