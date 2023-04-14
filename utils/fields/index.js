@@ -157,7 +157,7 @@ const generateObject = (req, temp ,callback) =>{
 			['company-email']: answers.filter((item)=> item.field.ref === 'a90973cf-92b6-46fc-8ee8-cd8d4f1a1efa')[0] ? answers.filter((item)=> item.field.ref === 'a90973cf-92b6-46fc-8ee8-cd8d4f1a1efa')[0].email : null,
 			['csr-report']: answers.filter((item)=> item.field.ref === 'd7aec445-86a8-472b-ae1e-4cbc700c1add')[0] ? answers.filter((item)=> item.field.ref === 'd7aec445-86a8-472b-ae1e-4cbc700c1add')[0].file_url : null,
 			['main-project-image']: answers.filter((item)=> item.field.ref === '554ab0e2-6af7-4942-bf01-f392fe27fbac')[0] ? answers.filter((item)=> item.field.ref === '554ab0e2-6af7-4942-bf01-f392fe27fbac')[0].file_url : null,
-			['project-details']: answers.filter((item)=> item.field.ref === 'dd88ec3e-224e-4c04-b87a-66a893b38478')[0] ? answers.filter((item)=> item.field.ref === 'dd88ec3e-224e-4c04-b87a-66a893b38478')[0].text : null,
+			['project-details']: answers.filter((item)=> item.field.ref === 'dd88ec3e-224e-4c04-b87a-66a893b38478')[0] ? answers.filter((item)=> item.field.ref === 'dd88ec3e-224e-4c04-b87a-66a893b38478')[0].text : null
 		}
 		console.log(body)
 		Object.assign(obj, body)
