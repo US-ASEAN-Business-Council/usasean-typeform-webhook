@@ -1,7 +1,6 @@
-org: enriquecellback
-app: typeform-webhook-integration
+org: usaseancouncil
+app: typeform
 service: typeform-webhook-integration
-frameworkVersion: '3'
 
 provider:
   name: aws
@@ -12,4 +11,4 @@ functions:
   api:
     handler: handler.handler
     events:
-      - httpApi: '*'
+      - httpApi: "*"
