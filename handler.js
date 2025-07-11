@@ -58,12 +58,14 @@ app.post('/test/:token/:collectionid', async (req, res) => {
     // Generate object with proper error handling
     generateObject(body, req, (result) => {
       if (!result) {
+        console.error('generateObject returned null/undefined');
         return res.status(500).json({
           error: "Failed to generate object from form data",
         });
       }
 
-      console.log("Starting to add...");
+      console.log("Generated object for Webflow:", JSON.stringify(result, null, 2));
+      console.log("Starting to add to collection:", collectionid);
       
       const item = api.createItem({
         collectionId: collectionid,
@@ -78,6 +80,7 @@ app.post('/test/:token/:collectionid', async (req, res) => {
         });
       }).catch((error) => {
         console.error('Webflow API error:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         return res.status(500).json({
           error: "Failed to create item in Webflow",
           details: error.message,

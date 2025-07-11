@@ -382,7 +382,10 @@ const generateObject = (req, temp ,callback) =>{
 		// Object.assign(obj, {"related-projects": false})
 
 	}
-	else if(temp.params.collectionid == process.env.WEBFLOW_20){
+	else if(temp.params.collectionid == process.env.WEBFLOW_20 || temp.params.collectionid === '6864bcb742f1c29d25d23142'){
+		console.log(`[Singapore Business Mission 2025] Processing webhook for collection ID: ${process.env.WEBFLOW_20}`)
+		console.log('Received answers:', JSON.stringify(req.form_response.answers, null, 2))
+		
 		let answers = req.form_response.answers
 		let body = {
 			client: answers.filter((item)=> item.field.ref === '01F1HK19XVNTGAKF4V80FF07D3')[0] ? answers.filter((item)=> item.field.ref === '01F1HK19XVNTGAKF4V80FF07D3')[0].text : null,
@@ -400,17 +403,23 @@ const generateObject = (req, temp ,callback) =>{
 			['covid19-support']: answers.filter((item)=> item.field.ref === 'c10e1c79-640a-4d89-a0d5-8e0376d1c902')[0] ? answers.filter((item)=> item.field.ref === 'c10e1c79-640a-4d89-a0d5-8e0376d1c902')[0].text : null,
 			['other-2']: answers.filter((item)=> item.field.ref === '3bbf39b9-1b10-4001-8a88-b34d265d9e25')[0] ? answers.filter((item)=> item.field.ref === '3bbf39b9-1b10-4001-8a88-b34d265d9e25')[0].text : null
 		}
-		console.log(body)
+		
+		// Clean up file URLs - ensure they have proper URL format
+		if (body['csr-report'] && body['csr-report'] !== 'file.ext') {
+			body['csr-report'] = { url: body['csr-report'] }
+		} else {
+			body['csr-report'] = null
+		}
+		
+		if (body['main-project-image'] && body['main-project-image'] !== 'file.ext') {
+			body['main-project-image'] = { url: body['main-project-image'] }
+		} else {
+			body['main-project-image'] = null
+		}
+		
+		console.log('Processed body:', JSON.stringify(body, null, 2))
 		Object.assign(obj, body)
-		console.log(`[Singapore Microsite 2025] Adding a new record to a collection with an ID of: ${process.env.WEBFLOW_20}`)
-		// Object.assign(obj, {'client': req.form_response.answers.filter((item)=> item.field.ref === '01F1HK19XVNTGAKF4V80FF07D3')[0].text})
-		// Object.assign(obj, {'name': req.form_response.answers.filter((item)=> item.field.ref === '01F1HK19XVNTGAKF4V80FF07D3')[0].text})
-		// Object.assign(obj, {'view-live-website': req.form_response.answers.filter((item)=> item.field.ref === 'ff2cbb49-aca0-4856-a8fb-3b7b66aa17d9')[0].url})
-		// Object.assign(obj, {'company-email':req.form_response.answers.filter((item)=> item.field.ref === 'a90973cf-92b6-46fc-8ee8-cd8d4f1a1efa')[0].email})
-		// Object.assign(obj, {'csr-report':{'url': req.form_response.answers.filter((item)=> item.field.ref === 'd7aec445-86a8-472b-ae1e-4cbc700c1add')[0].file_url}})
-		// Object.assign(obj, {'main-project-image':{'url':req.form_response.answers.filter((item)=> item.field.ref === '554ab0e2-6af7-4942-bf01-f392fe27fbac')[0].file_url}})
-		// Object.assign(obj, {'project-details':req.form_response.answers.filter((item)=> item.field.ref === 'dd88ec3e-224e-4c04-b87a-66a893b38478')[0].text})
-		// Object.assign(obj, {"related-projects": false})
+		console.log(`[Singapore Business Mission 2025] Adding a new record to a collection with an ID of: ${process.env.WEBFLOW_20}`)
 	}
 	//Add another if statement for every new typeform fields
 	//Add collectionid value to .env for the if statement
