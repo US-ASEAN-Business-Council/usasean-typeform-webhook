@@ -1,7 +1,7 @@
 const serverless = require("serverless-http");
 const express = require("express");
 const app = express();
-const Webflow = require('webflow-api')
+const { WebflowClient } = require('webflow-api')
 const generateObject = require('./utils/fields/index')
 
 // Add JSON body parsing middleware
@@ -24,8 +24,8 @@ app.post('/test/:token/:collectionid', async (req, res) => {
     const tokenid = req.params.token
     const collectionid = req.params.collectionid
     
-    // Initialize Webflow API with new v3 syntax
-    const webflow = new Webflow({ token: tokenid })
+    // Initialize Webflow API v2 client
+    const webflow = new WebflowClient({ accessToken: tokenid })
     
     // Get the body from the request (handles both API Gateway and direct requests)
     const body = req.body || JSON.parse(req.apiGateway?.event?.body || '{}')
@@ -38,11 +38,11 @@ app.post('/test/:token/:collectionid', async (req, res) => {
         console.log("Generated object:", JSON.stringify(result, null, 2))
         console.log("Starting to add to collection:", collectionid)
         
-        // Use the new v3 API syntax for creating items
-        const item = await webflow.createItem({
-          collectionId: collectionid,
+        // Use the new v2 API syntax for creating collection items
+        const item = await webflow.collections.createItem(collectionid, {
           fieldData: result,
-          live: true
+          isArchived: false,
+          isDraft: false
         })
         
         console.log(`Successfully added a new record to collection: ${collectionid}`)
@@ -50,7 +50,7 @@ app.post('/test/:token/:collectionid', async (req, res) => {
         
         return res.status(200).json({
           message: "Success!",
-          itemId: item._id,
+          itemId: item.id,
           collectionId: collectionid
         });
         
@@ -58,10 +58,29 @@ app.post('/test/:token/:collectionid', async (req, res) => {
         console.error("Error creating item in Webflow:", apiError)
         console.error("Error details:", JSON.stringify(apiError, null, 2))
         
-        return res.status(500).json({
-          error: "Failed to create item in Webflow",
+        // Handle specific Webflow API errors
+        let errorMessage = "Failed to create item in Webflow"
+        let statusCode = 500
+        
+        if (apiError.status === 401) {
+          errorMessage = "Invalid or expired access token"
+          statusCode = 401
+        } else if (apiError.status === 403) {
+          errorMessage = "Insufficient permissions for this collection"
+          statusCode = 403
+        } else if (apiError.status === 404) {
+          errorMessage = "Collection not found"
+          statusCode = 404
+        } else if (apiError.status === 422) {
+          errorMessage = "Invalid field data provided"
+          statusCode = 422
+        }
+        
+        return res.status(statusCode).json({
+          error: errorMessage,
           details: apiError.message || apiError.toString(),
-          collectionId: collectionid
+          collectionId: collectionid,
+          statusCode: apiError.status
         });
       }
     })
