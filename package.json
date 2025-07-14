@@ -12,6 +12,6 @@
   "dependencies": {
     "express": "^4.17.3",
     "serverless-http": "^2.7.0",
-    "webflow-api": "^0.6.0"
+    "webflow-api": "^3.1.3"
   }
 }
