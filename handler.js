@@ -1,7 +1,7 @@
 const serverless = require("serverless-http");
 const express = require("express");
+const axios = require("axios");
 const app = express();
-const { WebflowClient } = require('webflow-api')
 const generateObject = require('./utils/fields/index')
 
 // Add JSON body parsing middleware
@@ -19,76 +19,50 @@ app.get("/hello", (req, res, next) => {
   });
 });
 
-app.post('/test/:token/:collectionid', async (req, res) => {
+app.post('/test/:token/:collectionid/:siteid', async (req, res) => {
   try {
-    const tokenid = req.params.token
-    const collectionid = req.params.collectionid
-    
-    // Initialize Webflow API v2 client
-    const webflow = new WebflowClient({ accessToken: tokenid })
-    
-    // Get the body from the request (handles both API Gateway and direct requests)
-    const body = req.body || JSON.parse(req.apiGateway?.event?.body || '{}')
-    
-    console.log("Received webhook data:", JSON.stringify(body, null, 2))
-    
-    // Generate the object using the callback pattern
+    const tokenid = req.params.token;
+    const collectionid = req.params.collectionid;
+    const siteid = req.params.siteid;
+    const body = req.body || JSON.parse(req.apiGateway?.event?.body || '{}');
+
     generateObject(body, req, async (result) => {
       try {
-        console.log("Generated object:", JSON.stringify(result, null, 2))
-        console.log("Starting to add to collection:", collectionid)
-        
-        // Use the new v2 API syntax for creating collection items
-        const item = await webflow.collections.createItem(collectionid, {
-          fieldData: result,
-          isArchived: false,
-          isDraft: false
-        })
-        
-        console.log(`Successfully added a new record to collection: ${collectionid}`)
-        console.log("Created item:", JSON.stringify(item, null, 2))
-        
+        // Create and publish item in one step using /live endpoint
+        const url = `https://api.webflow.com/v2/collections/${collectionid}/items/live`;
+        const response = await axios.post(
+          url,
+          {
+            fieldData: result,
+            isArchived: false,
+            isDraft: false
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${tokenid}`,
+              'Content-Type': 'application/json',
+              'accept-version': '2.0.0',
+              'x-webflow-site-id': siteid
+            }
+          }
+        );
+
+        console.log(`✅ Item created and published successfully`);
+
         return res.status(200).json({
-          message: "Success!",
-          itemId: item.id,
-          collectionId: collectionid
+          message: "Success! Item created and published.",
+          item: response.data
         });
-        
+
       } catch (apiError) {
-        console.error("Error creating item in Webflow:", apiError)
-        console.error("Error details:", JSON.stringify(apiError, null, 2))
-        
-        // Handle specific Webflow API errors
-        let errorMessage = "Failed to create item in Webflow"
-        let statusCode = 500
-        
-        if (apiError.status === 401) {
-          errorMessage = "Invalid or expired access token"
-          statusCode = 401
-        } else if (apiError.status === 403) {
-          errorMessage = "Insufficient permissions for this collection"
-          statusCode = 403
-        } else if (apiError.status === 404) {
-          errorMessage = "Collection not found"
-          statusCode = 404
-        } else if (apiError.status === 422) {
-          errorMessage = "Invalid field data provided"
-          statusCode = 422
-        }
-        
-        return res.status(statusCode).json({
-          error: errorMessage,
-          details: apiError.message || apiError.toString(),
-          collectionId: collectionid,
-          statusCode: apiError.status
+        console.error('API Error:', apiError.response?.data || apiError.message);
+        return res.status(apiError.response?.status || 500).json({
+          error: apiError.message,
+          details: apiError.response?.data
         });
       }
-    })
-    
+    });
   } catch (error) {
-    console.error("General error in webhook handler:", error)
-    console.error("Error details:", JSON.stringify(error, null, 2))
-    
     return res.status(500).json({
       error: "Internal server error",
       details: error.message || error.toString()
